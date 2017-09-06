@@ -55,6 +55,14 @@
             <groupId>org.quartz-scheduler.wso2</groupId>
             <artifactId>quartz</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.coordination</groupId>
+            <artifactId>org.wso2.carbon.cluster.coordinator.commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.coordination</groupId>
+            <artifactId>org.wso2.carbon.cluster.coordinator.rdbms</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -76,11 +84,14 @@
                         <Import-Package>
                             org.quartz.*;version="2.1.1",
                             javax.xml.parsers; version="${javax.xml.parsers.import.pkg.version}",
+                            org.wso2.carbon.cluster.coordinator.commons; version="${carbon.coordination.imp.package.version}",
+                            org.wso2.carbon.cluster.coordinator.rdbms; version="${carbon.coordination.imp.package.version}",
                             *;resolution:=optional
                         </Import-Package>
                         <Export-Package>
                             !org.wso2.carbon.ntask.internal,
                             org.wso2.carbon.ntask.core.*; version="${carbon.commons.exp.package.version}",
+                            org.wso2.carbon.ntask.core.impl.clustered.*="${carbon.commons.exp.package.version}"
                         </Export-Package>
 			<Carbon-Component>UIBundle</Carbon-Component>
                     </instructions>

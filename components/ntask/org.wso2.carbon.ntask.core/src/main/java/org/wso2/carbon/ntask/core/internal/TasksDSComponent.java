@@ -26,7 +26,10 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
+import org.wso2.carbon.cluster.coordinator.commons.ClusterCoordinator;
+import org.wso2.carbon.cluster.coordinator.commons.CoordinationStrategy;
 import org.wso2.carbon.core.ServerStartupObserver;
+import org.wso2.carbon.ntask.core.Task;
 import org.wso2.carbon.ntask.core.TaskStartupHandler;
 import org.wso2.carbon.ntask.core.impl.QuartzCachedThreadPool;
 import org.wso2.carbon.ntask.core.impl.TaskAxis2ConfigurationContextObserver;
@@ -61,6 +64,9 @@ import java.util.concurrent.Executors;
  * bind="setSecretCallbackHandlerService" unbind="unsetSecretCallbackHandlerService"
  * @scr.reference name="listener.manager.service" interface="org.apache.axis2.engine.ListenerManager"
  * cardinality="1..1" policy="dynamic"  bind="setListenerManager" unbind="unsetListenerManager"
+ * @scr.reference name="org.wso2.carbon.cluster.coordinator.commons.ClusterCoordinator"
+ * interface="org.wso2.carbon.cluster.coordinator.commons.ClusterCoordinator"
+ * cardinality="1..1" policy="dynamic"  bind="setClusterCoordinator" unbind="unsetClusterCoordinator"
  */
 public class TasksDSComponent {
 
@@ -81,6 +87,11 @@ public class TasksDSComponent {
     private static TaskService taskService;
     
     private static ExecutorService executor = Executors.newCachedThreadPool();
+
+    /**
+     * Variable to hold the reference to the Cluster Coordinator.
+     */
+    private static ClusterCoordinator clusterCoordinator;
 
     protected void activate(ComponentContext ctx) {
         try {
@@ -213,4 +224,15 @@ public class TasksDSComponent {
         /* empty */
     }
 
+    protected void setClusterCoordinator(ClusterCoordinator clusterCoordinator) {
+        TasksDSComponent.clusterCoordinator = clusterCoordinator;
+    }
+
+    public static ClusterCoordinator getClusterCoordinator() {
+        return TasksDSComponent.clusterCoordinator;
+    }
+
+    protected void unsetClusterCoordinator(ClusterCoordinator clusterCoordinator) {
+        //do nothing
+    }
 }

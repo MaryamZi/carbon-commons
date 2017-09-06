@@ -27,6 +27,8 @@ public class TaskConstants {
 	public static final String TASK_PROPERTIES = "__TASK_PROPERTIES__";
 	
 	public static final String FIXED_LOCATION_RESOLVER_PARAM = "__FIXED_LOCATION_RESOLVER_PARAM__";
+
+	public static final String TASK_TYPE_ESB = "ESB_TASK";
 	
 	@XmlEnum
 	public static enum TaskMisfirePolicy {

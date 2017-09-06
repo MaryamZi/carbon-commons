@@ -15,13 +15,16 @@
  */
 package org.wso2.carbon.ntask.core;
 
+import com.hazelcast.core.HazelcastInstance;
 import org.wso2.carbon.ntask.common.TaskException;
 
 import com.hazelcast.core.Member;
+import org.wso2.carbon.ntask.core.internal.TasksDSComponent;
 
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class represents a runtime context of the task service.
@@ -34,11 +37,18 @@ public class TaskServiceContext {
     
     private Map<String, Member> memberMap;
 
-    public TaskServiceContext(TaskRepository taskRepo, List<String> memberIds, 
-            Map<String, Member> memberMap) {
+    private boolean isRDBMSCoordination = false;
+
+    public TaskServiceContext(TaskRepository taskRepo, List<String> memberIds, Map<String, Member> memberMap) {
         this.taskRepo = taskRepo;
         this.memberIds = memberIds;
         this.memberMap = memberMap;
+    }
+
+    public TaskServiceContext(TaskRepository taskRepo, List<String> memberIds) {
+        isRDBMSCoordination = true;
+        this.taskRepo = taskRepo;
+        this.memberIds = memberIds;
     }
 
     public int getTenantId() {
@@ -58,12 +68,28 @@ public class TaskServiceContext {
     }
     
     public InetSocketAddress getServerAddress(int index) {
-        String memberId = this.memberIds.get(index);
-        Member member = this.memberMap.get(memberId);
-        if (member == null) {
+        if (isRDBMSCoordination) {
+            String memberId = this.memberIds.get(index);
+            if (TasksDSComponent.getHazelcastInstance() != null) {
+                HazelcastInstance hazelcastInstance = TasksDSComponent.getHazelcastInstance();
+                if (hazelcastInstance != null) {
+                    Set<Member> members = hazelcastInstance.getCluster().getMembers();
+                    for (Member member:members) {
+                        if (member.getUuid().equals(memberId)) {
+                            return member.getSocketAddress();
+                        }
+                    }
+                }
+            }
             return null;
+        } else {
+            String memberId = this.memberIds.get(index);
+            Member member = this.memberMap.get(memberId);
+            if (member == null) {
+                return null;
+            }
+            return member.getSocketAddress();
         }
-        return member.getSocketAddress();
     }
 
 }

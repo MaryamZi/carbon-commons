@@ -19,6 +19,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.ntask.common.TaskConstants;
 import org.wso2.carbon.ntask.common.TaskException;
 import org.wso2.carbon.ntask.common.TaskException.Code;
 import org.wso2.carbon.ntask.core.TaskManager;
@@ -27,6 +28,8 @@ import org.wso2.carbon.ntask.core.TaskManagerId;
 import org.wso2.carbon.ntask.core.TaskUtils;
 import org.wso2.carbon.ntask.core.impl.clustered.ClusterGroupCommunicator;
 import org.wso2.carbon.ntask.core.impl.clustered.ClusteredTaskManagerFactory;
+import org.wso2.carbon.ntask.core.impl.clustered.HazelcastClusterGroupCommunicator;
+import org.wso2.carbon.ntask.core.impl.clustered.RDBMSClusterGroupCommunicator;
 import org.wso2.carbon.ntask.core.impl.remote.RemoteTaskManager;
 import org.wso2.carbon.ntask.core.impl.remote.RemoteTaskManagerFactory;
 import org.wso2.carbon.ntask.core.impl.standalone.StandaloneTaskManagerFactory;
@@ -35,15 +38,16 @@ import org.wso2.carbon.ntask.core.service.impl.TaskServiceXMLConfiguration.Defau
 import org.wso2.carbon.ntask.core.service.impl.TaskServiceXMLConfiguration.DefaultLocationResolver.Property;
 import org.wso2.carbon.utils.CarbonUtils;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+
 
 /**
  * This class represents the TaskService implementation.
@@ -163,7 +167,13 @@ public class TaskServiceImpl implements TaskService {
     
     private void processClusteredTaskTypeRegistration(String taskType) throws TaskException {
         if (this.getEffectiveTaskServerMode() == TaskServerMode.CLUSTERED) {
-            ClusterGroupCommunicator.getInstance(taskType).addMyselfToGroup();
+//            HazelcastClusterGroupCommunicator.getInstance(taskType).addMyselfToGroup();
+//            RDBMSClusterGroupCommunicator.getInstance(taskType).addMyselfToGroup();
+            if (taskType.equals(TaskConstants.TASK_TYPE_ESB)) {
+                RDBMSClusterGroupCommunicator.getInstance(taskType).addMyselfToGroup();
+            } else {
+                HazelcastClusterGroupCommunicator.getInstance(taskType).addMyselfToGroup();
+            }
         }
     }
 
@@ -250,6 +260,7 @@ public class TaskServiceImpl implements TaskService {
             }
             if (this.taskServerCount == -1) {
                 String taskServerCountStr = System.getProperty(
+//                        HazelcastClusterGroupCommunicator.TASK_SERVER_COUNT_SYS_PROP);
                         ClusterGroupCommunicator.TASK_SERVER_COUNT_SYS_PROP);
                 if (taskServerCountStr != null) {
                     this.taskServerCount = Integer.parseInt(taskServerCountStr);
@@ -321,7 +332,12 @@ public class TaskServiceImpl implements TaskService {
     public void runAfterRegistrationActions() throws TaskException {
         if (this.getEffectiveTaskServerMode() == TaskServerMode.CLUSTERED) {
             for (String taskType : this.getRegisteredTaskTypes()) {
-                ClusterGroupCommunicator.getInstance(taskType).checkServers();
+//                HazelcastClusterGroupCommunicator.getInstance(taskType).checkServers();
+                if (taskType.equals(TaskConstants.TASK_TYPE_ESB)) {
+                    RDBMSClusterGroupCommunicator.getInstance(taskType).checkServers();
+                } else {
+                    HazelcastClusterGroupCommunicator.getInstance(taskType).checkServers();
+                }
             }
         }
     }

@@ -15,6 +15,7 @@
  */
 package org.wso2.carbon.ntask.core.impl.clustered;
 
+import org.wso2.carbon.ntask.common.TaskConstants;
 import org.wso2.carbon.ntask.common.TaskException;
 import org.wso2.carbon.ntask.common.TaskException.Code;
 import org.wso2.carbon.ntask.core.*;
@@ -47,8 +48,20 @@ public class ClusteredTaskManager extends AbstractQuartzTaskManager {
         return this.getTaskRepository().getTasksType();
     }
 
+//    public HazelcastClusterGroupCommunicator getClusterComm() throws TaskException {
+//        return HazelcastClusterGroupCommunicator.getInstance(this.getTaskType());
+//    }
+
+//    public RDBMSClusterGroupCommunicator getClusterComm() throws TaskException {
+//        return RDBMSClusterGroupCommunicator.getInstance(this.getTaskType());
+//    }
+
     public ClusterGroupCommunicator getClusterComm() throws TaskException {
-        return ClusterGroupCommunicator.getInstance(this.getTaskType());
+        if (this.getTaskType().equals(TaskConstants.TASK_TYPE_ESB)) {
+            return RDBMSClusterGroupCommunicator.getInstance(this.getTaskType());
+        } else {
+            return HazelcastClusterGroupCommunicator.getInstance(this.getTaskType());
+        }
     }
 
     public void initStartupTasks() throws TaskException {
@@ -200,8 +213,13 @@ public class ClusteredTaskManager extends AbstractQuartzTaskManager {
     }
 
     private TaskServiceContext getTaskServiceContext() throws TaskException {
-        TaskServiceContext context = new TaskServiceContext(this.getTaskRepository(),
-                this.getMemberIds(), this.getClusterComm().getMemberMap());
+        TaskServiceContext context;
+        if (this.getTaskType().equals(TaskConstants.TASK_TYPE_ESB)) {
+            context = new TaskServiceContext(this.getTaskRepository(), this.getMemberIds());
+        } else {
+            context = new TaskServiceContext(this.getTaskRepository(), this.getMemberIds(),
+                    ((HazelcastClusterGroupCommunicator) this.getClusterComm()).getMemberMap());
+        }
         return context;
     }
 
